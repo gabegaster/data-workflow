@@ -145,11 +145,27 @@ class TaskGraph(object):
 
         # instantiate a new graph instance from the original data from
         # the tasks of self
-        tasks = map(self.task_dict.get, task_ids)
+        tasks = []
+        for task_id in task_ids:
+            tasks.extend(self.get_tasks(task_id))
+
         tasks_kwargs_list = [task.yaml_data for task in
                              self.iter_graph(tasks, downstream=False)]
         subgraph = TaskGraph(self.config_path, tasks_kwargs_list)
         return subgraph
+
+    def get_tasks(self, task_id_or_tag):
+        # get the task associated to this id or to this tag; defer to id.
+        task = self.task_dict.get(task_id_or_tag)
+        if task is None:
+            tasks = []
+            for task in self.task_list:
+                if task.has_tag(task_id_or_tag):
+                    tasks.append(task)
+        else:
+            return [task]
+        return self.tag_dict.get(task)
+
 
     def _dereference_alias_helper(self, name):
         if name is None:
